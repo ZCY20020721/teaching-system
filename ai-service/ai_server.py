@@ -8,14 +8,29 @@ import sys
 SYSTEM_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "НИРС")
 sys.path.insert(0, SYSTEM_ROOT)
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from rag_engine import RAGEngine
 from cot_grader import CoTGrader
 
 app = FastAPI(title="RAG+CoT AI Service")
-rag = RAGEngine()
-grader = CoTGrader()
+
+# 延迟加载，启动快
+_rag = None
+_grader = None
+
+def get_rag():
+    global _rag
+    if _rag is None:
+        _rag = RAGEngine()
+    return _rag
+
+def get_grader():
+    global _grader
+    if _grader is None:
+        _grader = CoTGrader()
+    return _grader
 
 
 class SearchRequest(BaseModel):
@@ -35,13 +50,13 @@ class GradeRequest(BaseModel):
 
 @app.post("/ai/search")
 def search(req: SearchRequest):
-    results = rag.search(req.query, k=req.k)
+    results = get_rag().search(req.query, k=req.k)
     return {"results": results}
 
 
 @app.post("/ai/generate-question")
 def generate_question(req: GenerateRequest):
-    result = grader.generate_question(req.rag_context)
+    result = get_grader().generate_question(req.rag_context)
     if result is None:
         raise HTTPException(500, "出题失败")
     return result
@@ -49,9 +64,13 @@ def generate_question(req: GenerateRequest):
 
 @app.post("/ai/grade-answer")
 def grade_answer(req: GradeRequest):
-    result = grader.grade_answer(
+    result = get_grader().grade_answer(
         req.rag_context, req.standard_answer_points, req.student_answer
     )
     if result is None:
         raise HTTPException(500, "批改失败")
     return result
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

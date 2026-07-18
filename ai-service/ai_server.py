@@ -8,6 +8,10 @@ import sys
 SYSTEM_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "НИРС")
 sys.path.insert(0, SYSTEM_ROOT)
 
+# 强制加载 НИРС/.env 中的环境变量（含 Embedding API Key）
+from dotenv import load_dotenv
+load_dotenv(os.path.join(SYSTEM_ROOT, ".env"))
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -72,14 +76,27 @@ def grade_answer(req: GradeRequest):
     return result
 
 
+import base64
+import tempfile
+
+
 class LoadPdfRequest(BaseModel):
-    pdf_path: str
+    filename: str
+    data_b64: str
 
 
 @app.post("/ai/load-pdf")
 def load_pdf(req: LoadPdfRequest):
-    count = get_rag().load_pdf(req.pdf_path)
-    return {"chunks": count}
+    # Decode base64 + save to temp file, then load into ChromaDB
+    pdf_bytes = base64.b64decode(req.data_b64)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(pdf_bytes)
+        tmp_path = tmp.name
+    try:
+        count = get_rag().load_pdf(tmp_path)
+        return {"chunks": count}
+    finally:
+        os.unlink(tmp_path)
 
 
 if __name__ == "__main__":

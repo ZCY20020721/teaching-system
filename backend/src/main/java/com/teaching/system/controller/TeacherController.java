@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
 import java.util.Map;
 
 @RestController
@@ -32,11 +31,8 @@ public class TeacherController {
     public R uploadMaterial(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) return R.error("文件为空");
         try {
-            String uploadDir = System.getProperty("user.dir") + "/uploads/pdfs";
-            new File(uploadDir).mkdirs();
-            String filePath = uploadDir + "/" + file.getOriginalFilename();
-            file.transferTo(new File(filePath));
-            String result = aiService.loadPdf(filePath);
+            byte[] pdfBytes = file.getBytes();
+            String result = aiService.loadPdf(pdfBytes, file.getOriginalFilename());
             return R.ok(Map.of("chunks", result, "filename", file.getOriginalFilename()));
         } catch (Exception e) {
             return R.error("上传失败: " + e.getMessage());

@@ -5,6 +5,7 @@ import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.util.Base64;
 import java.util.Map;
 
 @Service
@@ -39,8 +40,9 @@ public class AIService {
         return results != null ? results.toString() : "";
     }
 
-    public String loadPdf(String filePath) {
-        Map<String, Object> result = callAI("/ai/load-pdf", Map.of("pdf_path", filePath));
+    public String loadPdf(byte[] pdfBytes, String filename) {
+        String b64 = Base64.getEncoder().encodeToString(pdfBytes);
+        Map<String, Object> result = callAI("/ai/load-pdf", Map.of("filename", filename, "data_b64", b64));
         Object chunks = result.get("chunks");
         return chunks != null ? chunks.toString() : "0";
     }

@@ -1,20 +1,26 @@
 package com.teaching.system.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class AIService {
 
     @Value("${ai-service.url}")
     private String aiServiceUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public AIService() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(60000);
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     public Map<String, Object> generateQuestion(String ragContext) {
         return callAI("/ai/generate-question", Map.of("rag_context", ragContext));

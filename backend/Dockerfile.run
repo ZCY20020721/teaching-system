@@ -1,0 +1,4 @@
+FROM eclipse-temurin:21-jre
+COPY target/teaching-system-1.0.0.jar /app/app.jar
+WORKDIR /app
+CMD ["java", "-jar", "app.jar"]

@@ -6,6 +6,8 @@ import com.teaching.system.entity.ExamRecord;
 import com.teaching.system.entity.Exercise;
 import com.teaching.system.mapper.ExamRecordMapper;
 import com.teaching.system.mapper.ExerciseMapper;
+import com.teaching.system.mapper.MessageMapper;
+import com.teaching.system.mapper.UserMapper;
 import com.teaching.system.service.AIService;
 import com.teaching.system.util.R;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ public class TeacherController {
 
     private final ExerciseMapper exerciseMapper;
     private final ExamRecordMapper examRecordMapper;
+    private final MessageMapper messageMapper;
+    private final UserMapper userMapper;
     private final AIService aiService;
 
     @PostMapping("/materials/upload")

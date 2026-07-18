@@ -72,5 +72,15 @@ def grade_answer(req: GradeRequest):
     return result
 
 
+class LoadPdfRequest(BaseModel):
+    pdf_path: str
+
+
+@app.post("/ai/load-pdf")
+def load_pdf(req: LoadPdfRequest):
+    count = get_rag().load_pdf(req.pdf_path)
+    return {"chunks": count}
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

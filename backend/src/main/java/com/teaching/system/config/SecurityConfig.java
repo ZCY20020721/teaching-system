@@ -20,9 +20,7 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,6 +35,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/v1/auth/**", "/doc.html", "/v3/api-docs/**",
                              "/webjars/**", "/ws/**").permitAll()
+            .requestMatchers("/api/v1/chat/**").authenticated()
             .requestMatchers("/api/v1/teacher/**").hasRole("TEACHER")
             .requestMatchers("/api/v1/student/**").hasRole("STUDENT")
             .anyRequest().authenticated()

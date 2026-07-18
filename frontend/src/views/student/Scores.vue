@@ -22,7 +22,7 @@ const records = ref([])
 const avg = computed(() => records.value.length ? (records.value.reduce((s, r) => s + (r.totalScore || 0), 0) / records.value.length).toFixed(1) : 0)
 const max = computed(() => records.value.length ? Math.max(...records.value.map(r => r.totalScore || 0)).toFixed(1) : 0)
 onMounted(async () => {
-  const r = await request.get('/student/scores?studentId=' + localStorage.getItem('userId'))
+  const r = await request.get('/student/scores')
   records.value = r.data || []
 })
 </script>

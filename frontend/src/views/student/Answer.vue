@@ -32,7 +32,6 @@ import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 const exercises = ref([]); const selectedId = ref(null); const exercise = ref(null)
 const answer = ref(''); const result = ref(null); const submitting = ref(false)
-const userId = localStorage.getItem('userId')
 
 onMounted(async () => { const r = await request.get('/student/exercises'); exercises.value = r.data || [] })
 function selectExercise() {
@@ -42,7 +41,7 @@ function selectExercise() {
 async function submit() {
   if (!answer.value.trim()) return
   submitting.value = true
-  const r = await request.post('/student/answers/' + selectedId.value, { studentAnswer: answer.value, studentId: userId })
+  const r = await request.post('/student/answers/' + selectedId.value, { studentAnswer: answer.value })
   result.value = r.data
   submitting.value = false
 }

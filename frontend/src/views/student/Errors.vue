@@ -23,10 +23,9 @@ const errorStats = ref([])
 const weakRecords = ref([])
 const chartRef = ref(null)
 onMounted(async () => {
-  const uid = localStorage.getItem('userId')
   const [r1, r2] = await Promise.all([
-    request.get('/student/errors?studentId=' + uid),
-    request.get('/student/scores?studentId=' + uid)
+    request.get('/student/errors'),
+    request.get('/student/scores')
   ])
   errorStats.value = r1.data || []
   const allRecords = r2.data || []

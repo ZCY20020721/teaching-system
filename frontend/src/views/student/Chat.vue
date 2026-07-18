@@ -25,27 +25,34 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import request from '@/utils/request'
 const userId = Number(localStorage.getItem('userId'))
 const contacts = ref([]); const messages = ref([])
 const selectedId = ref(null); const selectedName = ref(''); const inputText = ref('')
-const msgBox = ref(null)
+const msgBox = ref(null); let pollTimer = null
 
 onMounted(async () => {
-  const r = await request.get('/student/chat/contacts'); contacts.value = r.data || []
+  const r = await request.get('/chat/contacts'); contacts.value = r.data || []
 })
 async function selectContact(t) {
   selectedId.value = t.id; selectedName.value = t.username
-  const r = await request.get('/student/chat/messages/' + t.id + '?studentId=' + userId)
+  if (pollTimer) clearInterval(pollTimer)
+  await loadMessages()
+  pollTimer = setInterval(loadMessages, 2000)
+}
+async function loadMessages() {
+  if (!selectedId.value) return
+  const r = await request.get('/chat/messages/' + selectedId.value)
   messages.value = r.data || []
   await nextTick()
   if (msgBox.value) msgBox.value.scrollTop = msgBox.value.scrollHeight
 }
 async function sendMsg() {
   if (!inputText.value.trim() || !selectedId.value) return
-  await request.post('/student/chat/messages/' + selectedId.value + '?studentId=' + userId, { content: inputText.value })
+  await request.post('/chat/send', { receiverId: selectedId.value, content: inputText.value })
   inputText.value = ''
-  await selectContact({ id: selectedId.value, username: selectedName.value })
+  await loadMessages()
 }
+onBeforeUnmount(() => { if (pollTimer) clearInterval(pollTimer) })
 </script>

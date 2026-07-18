@@ -37,7 +37,8 @@ async function generate() {
   genLoading.value = false
 }
 async function publish() {
-  await request.post(`/teacher/exercises?teacherId=${localStorage.getItem('userId')}`, currentQuestion.value)
+  if (!currentQuestion.value) return
+  await request.post('/teacher/exercises', currentQuestion.value)
   currentQuestion.value = null
   const r = await request.get('/teacher/exercises')
   exercises.value = r.data || []

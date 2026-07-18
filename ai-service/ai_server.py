@@ -44,6 +44,7 @@ class SearchRequest(BaseModel):
 
 class GenerateRequest(BaseModel):
     rag_context: str
+    requirement: str = None
 
 
 class GradeRequest(BaseModel):
@@ -60,7 +61,7 @@ def search(req: SearchRequest):
 
 @app.post("/ai/generate-question")
 def generate_question(req: GenerateRequest):
-    result = get_grader().generate_question(req.rag_context)
+    result = get_grader().generate_question(req.rag_context, req.requirement)
     if result is None:
         raise HTTPException(500, "出题失败")
     return result

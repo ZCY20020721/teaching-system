@@ -5,3 +5,4 @@ target/
 *.jar
 mysql_data/
 .env
+chroma_db/

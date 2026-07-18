@@ -2,12 +2,8 @@ package com.teaching.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.teaching.system.entity.ExamRecord;
-import com.teaching.system.entity.Exercise;
-import com.teaching.system.mapper.ExamRecordMapper;
-import com.teaching.system.mapper.ExerciseMapper;
-import com.teaching.system.mapper.MessageMapper;
-import com.teaching.system.mapper.UserMapper;
+import com.teaching.system.entity.*;
+import com.teaching.system.mapper.*;
 import com.teaching.system.service.AIService;
 import com.teaching.system.util.R;
 import lombok.RequiredArgsConstructor;
@@ -23,27 +19,47 @@ public class TeacherController {
 
     private final ExerciseMapper exerciseMapper;
     private final ExamRecordMapper examRecordMapper;
-    private final MessageMapper messageMapper;
-    private final UserMapper userMapper;
+    private final MaterialMapper materialMapper;
     private final AIService aiService;
 
     @PostMapping("/materials/upload")
-    public R uploadMaterial(@RequestParam("file") MultipartFile file) {
+    public R uploadMaterial(@RequestParam("file") MultipartFile file, Authentication auth) {
         if (file.isEmpty()) return R.error("文件为空");
         try {
+            Long teacherId = (Long) auth.getPrincipal();
             byte[] pdfBytes = file.getBytes();
-            String result = aiService.loadPdf(pdfBytes, file.getOriginalFilename());
-            return R.ok(Map.of("chunks", result, "filename", file.getOriginalFilename()));
+            String chunksStr = aiService.loadPdf(pdfBytes, file.getOriginalFilename());
+            int chunks = Integer.parseInt(chunksStr);
+            Material mat = new Material();
+            mat.setTeacherId(teacherId);
+            mat.setFilename(file.getOriginalFilename());
+            mat.setOriginalName(file.getOriginalFilename());
+            mat.setChunks(chunks);
+            materialMapper.insert(mat);
+            return R.ok(Map.of("chunks", chunks, "filename", file.getOriginalFilename(), "id", mat.getId()));
         } catch (Exception e) {
-            return R.error("上传失败: " + e.getMessage());
+            return R.error("upload fail: " + e.getMessage());
         }
     }
 
+    @GetMapping("/materials")
+    public R listMaterials(Authentication auth) {
+        Long teacherId = (Long) auth.getPrincipal();
+        return R.ok(materialMapper.selectList(
+                new LambdaQueryWrapper<Material>().eq(Material::getTeacherId, teacherId)
+                        .orderByDesc(Material::getCreatedAt)));
+    }
+
     @PostMapping("/exercises/generate")
-    public R generateQuestion() {
-        String context = aiService.search("key concepts", 5);
-        Map<String, Object> result = aiService.generateQuestion(context);
-        if (result.containsKey("error")) return R.error("AI出题失败");
+    public R generateQuestion(@RequestBody(required = false) Map<String, Object> body) {
+        String searchQuery = "key concepts";
+        String customReq = null;
+        if (body != null) {
+            customReq = (String) body.getOrDefault("requirement", null);
+        }
+        String context = aiService.search(searchQuery, 8);
+        Map<String, Object> result = aiService.generateQuestion(context, customReq);
+        if (result.containsKey("error")) return R.error("AI gen failed");
         return R.ok(result);
     }
 

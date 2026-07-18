@@ -5,8 +5,7 @@ import org.springframework.http.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.util.Base64;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AIService {
@@ -19,12 +18,17 @@ public class AIService {
     public AIService() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(5000);
-        factory.setReadTimeout(60000);
+        factory.setReadTimeout(120000);
         this.restTemplate = new RestTemplate(factory);
     }
 
-    public Map<String, Object> generateQuestion(String ragContext) {
-        return callAI("/ai/generate-question", Map.of("rag_context", ragContext));
+    public Map<String, Object> generateQuestion(String ragContext, String customRequirement) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("rag_context", ragContext);
+        if (customRequirement != null && !customRequirement.isBlank()) {
+            body.put("requirement", customRequirement);
+        }
+        return callAI("/ai/generate-question", body);
     }
 
     public Map<String, Object> gradeAnswer(String ragContext, String answerPoints, String studentAnswer) {

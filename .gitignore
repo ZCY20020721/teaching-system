@@ -1,0 +1,7 @@
+node_modules/
+dist/
+target/
+*.class
+*.jar
+mysql_data/
+.env
